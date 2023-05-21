@@ -1,0 +1,20 @@
+<?php
+	$aModules = array (
+  'de\\roccogossmann\\php\\core\\Utils' => 'Utils.php',
+  'de\\roccogossmann\\php\\core\\APIResponse' => 'APIServer.php',
+  'de\\roccogossmann\\php\\core\\APIBase' => 'APIServer.php',
+  'de\\roccogossmann\\php\\core\\APIServer' => 'APIServer.php',
+  'de\\roccogossmann\\php\\core\\APIClient' => 'APIClient.php',
+  'de\\roccogossmann\\php\\core\\FetchResult' => 'APIClient.php',
+  'de\\roccogossmann\\php\\core\\APIClientException' => 'APIClient.php',
+  'de\\roccogossmann\\php\\core\\FileHandler' => 'FileHandler.php',
+  'de\\roccogossmann\\php\\core\\FileHandlerException' => 'FileHandler.php',
+  'de\\roccogossmann\\php\\core\\tSingleton' => 'tSingleton.php',
+  'de\\roccogossmann\\php\\core\\Mailer' => 'Mailer.php',
+  'PHPMailer\\PHPMailer\\Exception' => 'vendor/PHPMailer/src/Exception.php',
+  'de\\roccogossmann\\php\\core\\OSSL' => 'OSSL.php',
+  'de\\roccogossmann\\php\\core\\OSSLException' => 'OSSL.php',
+  'de\\roccogossmann\\php\\core\\SaltSet' => 'SaltSet.php',
+  'de\\roccogossmann\\php\\core\\SaltSetException' => 'SaltSet.php',
+  'de\\roccogossmann\\php\\core\\tDebug' => 'tDebug.php',
+);
