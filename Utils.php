@@ -87,10 +87,12 @@ class Utils
      *
      * @param array $aTarget The array to mutate
      * @param array $aMutations the data to muate with
+     *              Should a mutation key point to `null` than that value will not be mutated
      */
     public static function mutateArrayRecursive(array &$aTarget, array $aMutations)
     {
         foreach($aMutations as $mKey => $mValue) {
+            if($mValue === null) continue;
             if(isset($aTarget[$mKey])) {
                 if(is_array($aTarget[$mKey]) and is_array($mValue))
                     self::mutateArrayRecursive($aTarget[$mKey], $mValue);
