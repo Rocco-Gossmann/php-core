@@ -1,6 +1,6 @@
 <?php
 
-namespace de\rogoss\php\core;
+namespace rogoss\core;
 
 use Closure;
 

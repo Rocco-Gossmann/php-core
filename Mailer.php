@@ -1,4 +1,4 @@
-<?php namespace de\rogoss\php\core;
+<?php namespace rogoss\core;
 
 require_once __DIR__ . "/vendor/PHPMailer/src/Exception.php";
 require_once __DIR__ . "/vendor/PHPMailer/src/PHPMailer.php";

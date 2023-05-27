@@ -1,4 +1,4 @@
-<?php namespace de\rogoss\php\core;
+<?php namespace rogoss\core;
 
 
 class FileHandler {
