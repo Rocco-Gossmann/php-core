@@ -1,4 +1,4 @@
-<?php namespace de\roccogossmann\php\core;
+<?php namespace de\rogoss\php\core;
 
 require_once __DIR__ . "/vendor/PHPMailer/src/Exception.php";
 require_once __DIR__ . "/vendor/PHPMailer/src/PHPMailer.php";

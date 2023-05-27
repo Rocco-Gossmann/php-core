@@ -1,6 +1,6 @@
 <?php
 
-namespace de\roccogossmann\php\core;
+namespace de\rogoss\php\core;
 
 use Closure;
 

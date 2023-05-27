@@ -1,4 +1,4 @@
-<?php namespace de\roccogossmann\php\core;
+<?php namespace de\rogoss\php\core;
 
 
 class FileHandler {
