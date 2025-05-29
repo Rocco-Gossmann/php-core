@@ -10,16 +10,18 @@ use PHPMailer\PHPMailer\PHPMailer;
 class Mailer extends PHPMailer {
     use tSingleton;
 
-    private function __construct() { 
+    private function __construct() {
 		parent::__construct(true);
 
 		$this->isSMTP();                                      //Send using SMTP
 		$this->Host       = $this->_getEnvVar("MAILER_HOST"); //Set the SMTP server to send through
     	$this->Port       = $this->_getEnvVar("MAILER_PORT"); //TCP port to connect to; use 587 if you have set `SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS`
 
-		$this->SMTPAuth   = true;                             //Enable SMTP authentication
-		$this->Username   = $this->_getEnvVar("MAILER_USER"); //SMTP username
-		$this->Password   = $this->_getEnvVar("MAILER_PASS"); //SMTP password
+		if(!empty(getenv("MAILER_USER"))) {
+			$this->SMTPAuth   = true;                             //Enable SMTP authentication
+			$this->Username   = $this->_getEnvVar("MAILER_USER"); //SMTP username
+			$this->Password   = $this->_getEnvVar("MAILER_PASS"); //SMTP password
+		}
 
     	if(!empty(getenv("MAILER_SECURE")))
         	$this->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;  //Enable implicit TLS encryption
