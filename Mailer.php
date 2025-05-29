@@ -25,6 +25,10 @@ class Mailer extends PHPMailer {
 
     	if(!empty(getenv("MAILER_SECURE")))
         	$this->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;  //Enable implicit TLS encryption
+
+		if(!empty(getenv("MAILER_SENDER_MAIL")))
+			$this->setFrom(getenv("MAILER_SENDER_MAIL"), getenv("MAILER_SENDER_NAME"));
+
     }
 
 	public function from(string $sEmail, string $sName="") { $this->setFrom($sEmail, $sName); return $this; }
@@ -34,10 +38,10 @@ class Mailer extends PHPMailer {
 
 	public function subject(string $subject)   { $this->Subject = $subject; return $this; }
 
-	public function html(string $content) { 
-		$this->isHTML(true);  
-		$this->Body = $content; 
-		if(empty($this->AltBody)) 
+	public function html(string $content) {
+		$this->isHTML(true);
+		$this->Body = $content;
+		if(empty($this->AltBody))
 			$this->AltBody = $content;
 
 		return $this;
