@@ -43,6 +43,10 @@ class Mailer extends PHPMailer {
 		return $this;
 	}
 
+	public function send() {
+		parent::send();
+	}
+
 	public function text(string $content) {
 		$this->AltBody = $content;
 		if(empty($this->Body)) $this->Body = "<pre>" . $content . "</pre>";;
