@@ -1,16 +1,47 @@
 <?php namespace rogoss\core;
 
+class OSSLException extends \Exception {
+	const OPENSSL_ERROR = 0;
+	const WRONG_MODE = 1;
+	const MISSING_CONFIG = 2;
+	const PRIVATE_KEYGEN_FAILED = 3;
+	const PUBLIC_KEYGEN_FAILED = 4;
+}
 
 class OSSL {
 
-	public static function createNewKeys(&$sPrivateKey, &$sPublicKey) 
+	public static function newPublicKeyFromPrivate(string $privateKeyString, string $privateKeyPassphrase) : string
+	{
+		$privKey = openssl_pkey_get_private($privateKeyString, $privateKeyPassphrase);
+		$pubKey = (openssl_pkey_get_details($privKey)??[])['key']??false;
+
+		if(empty($pubKey))
+			throw new OSSLException("pkey_export error " . openssl_error_string());
+
+		// Sanitycheck
+		$sData = "Hello World\nHow is it going you 😁 -- ?@ä";
+
+		$sEnc = "";
+		$sDec = "";
+
+		openssl_private_encrypt($sData, $sEnc, $privKey);
+		openssl_public_decrypt($sEnc, $sDec, $pubKey);
+
+		if($sDec != $sData)
+			throw new OSSLException("public key generation error: sanity check failed ");
+
+		return $pubKey;
+
+	}
+
+	public static function newPrivateKey(string $passphrase = "") : string
 	{
 		$sConfFile = "/etc/ssl/openssl.cnf";
 
-		if(!is_file($sConfFile) and !empty(getenv("OPENSSL_CONF"))) 
+		if(!is_file($sConfFile) and !empty(getenv("OPENSSL_CONF")))
 			$sConfFile = getenv("OPENSSL_CONF");
 
-		if(empty($sConfFile) or !is_file($sConfFile)) 
+		if(empty($sConfFile) or !is_file($sConfFile))
 			throw new OSSLException("missing config file. Please define the 'OPENSSL_CONF' Environment variable to define, what file to use", OSSLException::MISSING_CONFIG);
 
 		$aConf = [
@@ -19,63 +50,49 @@ class OSSL {
 		];
 
 		if(is_file($sConfFile))
-			$aConfig['config'] = $sConfFile;
+			$aConf['config'] = $sConfFile;
 
-		$sPKey = openssl_pkey_new($aConf);		
-		if(!$sPKey) echo openssl_error_string();
-		else {
+		$privKey = openssl_pkey_new($aConf);
 
-			$sPrKey =""; 
-			if(!openssl_pkey_export($sPKey, $sPrKey, null, $aConf))
-				 echo "pkey_export error ", openssl_error_string();
-			else {
-				var_dump($sPrKey);
-				$sPuKey = (openssl_pkey_get_details($sPKey)??[])['key']??false;
-				if(empty($sPuKey))
-					echo "pkey_export error ", openssl_error_string();
-				else  {
-					var_dump($sPuKey);
-					$sData = "Hello World\nHowAre you 😁";
+		if(empty($privKey)) throw new OSSLException(openssl_error_string(), OSSLException::PRIVATE_KEYGEN_FAILED);
 
-					$sEnc = "";
-					$sDec = "";
+		$output = "";
+		if(!openssl_pkey_export($privKey, $output, $passphrase))
+			throw new OSSLException(openssl_error_string(), OSSLException::PRIVATE_KEYGEN_FAILED);
 
-					openssl_private_encrypt($sData, $sEnc, $sPrKey);
-					openssl_public_decrypt($sEnc, $sDec, $sPuKey);
-
-
-					if($sDec == $sData) {
-						$sPublicKey = $sPuKey;
-						$sPrivateKey = $sPrKey;
-					}
-				}
-			} 
-		}					
+		return $output;
 	}
 
-	public static function decrypter($sPubKey) 
+	public static function createNewKeys(&$sPrivateKey, &$sPublicKey, string $passphrase = "")
+	{
+		$sPrivateKey = self::newPrivateKey($passphrase);
+		$sPublicKey = self::newPublicKeyFromPrivate($sPrivateKey, $passphrase);
+	}
+
+	public static function decrypter($sPubKey)
 	{
 		$oInst = new static();
 		$oInst->sPubKey = $sPubKey;
-		return $oInst;	
+		return $oInst;
 	}
 
-	public static function encrypter($sPrivKey) 
+	public static function encrypter($sPrivKey)
 	{
 		$oInst = new static();
 		$oInst->sPrivKey = $sPrivKey;
-		return $oInst;	
+		return $oInst;
 	}
 
-	public static function basicCrypter($sPassPhrease, $iv="") {
+	public static function basicCrypter($sPassPhrease, $iv="")
+	{
 		$i = new static();
 		$i->bBasic = true;
 		$i->sPassPhrease = $sPassPhrease;
 		$i->sIV = $iv;
 
 		while(strlen($i->sIV) < 16)
-			$i->sIV .= $sPassPhrease;	
-	
+			$i->sIV .= $sPassPhrease;
+
 		$i->sIV = substr($i->sIV, 0, 16);
 		return $i;
 	}
@@ -91,12 +108,13 @@ class OSSL {
 	private function __construct() { }
 
 		/** Any data will be converted to JSON on encryption and parsed as JSON on decryption */
-	public function json() {
+	public function json()
+	{
 		$this->bJSON = true;
 		return $this;
 	}
 
-	public function encrypt($sData, $bRaw=false) 
+	public function encrypt($sData, $bRaw=false)
 	{
 		if($this->bJSON) $sData = json_encode($sData);
 
@@ -108,10 +126,10 @@ class OSSL {
 		}
 		else {
 
-			if(empty($this->sPrivKey)) 
+			if(empty($this->sPrivKey))
 				throw new OSSLException("no private key", OSSLException::WRONG_MODE);
 
-			$sEnc = "";	
+			$sEnc = "";
 			if(!openssl_private_encrypt($sData, $sEnc, $this->sPrivKey)) {
 				$sErr = openssl_error_string();
 				throw new OSSLException($sErr);
@@ -121,7 +139,7 @@ class OSSL {
 		return $bRaw ? $sEnc : base64_encode($sEnc);
 	}
 
-	public function decrypt($sData, $bRaw=false) 
+	public function decrypt($sData, $bRaw=false)
 	{
 		if($this->bBasic) {
 			$iOpt = $bRaw ? OPENSSL_RAW_DATA : 0;
@@ -129,10 +147,10 @@ class OSSL {
 		}
 		else {
 			$sRaw = $bRaw ? $sData : base64_decode($sData);
-			if(empty($this->sPubKey)) 
+			if(empty($this->sPubKey))
 				throw new OSSLException("no public key", OSSLException::WRONG_MODE);
 
-			$sDec = "";	
+			$sDec = "";
 			if(!openssl_public_decrypt($sRaw, $sDec, $this->sPubKey))
 				throw new OSSLException(openssl_error_string());
 		}
@@ -141,10 +159,4 @@ class OSSL {
 
 		return $sDec;
 	}
-}
-
-class OSSLException extends \Exception {
-	const OPENSSL_ERROR = 0;
-	const WRONG_MODE = 1;
-	const MISSING_CONFIG = 2;
 }
