@@ -2,7 +2,7 @@
 
 trait tDebug {
 
-	private static $__debugDisbaled = false;
+	private static $__debugDisbaled = true;
 
 	public static function setDebug($mode) {
 
