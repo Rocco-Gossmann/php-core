@@ -38,8 +38,8 @@ class OSSL {
 	{
 		$sConfFile = "/etc/ssl/openssl.cnf";
 
-		if(!is_file($sConfFile) and !empty(getenv("OPENSSL_CONF")))
-			$sConfFile = getenv("OPENSSL_CONF");
+		if(!is_file($sConfFile) and !empty(Utils::unpackEnv("OPENSSL_CONF")))
+			$sConfFile = Utils::unpackEnv("OPENSSL_CONF");
 
 		if(empty($sConfFile) or !is_file($sConfFile))
 			throw new OSSLException("missing config file. Please define the 'OPENSSL_CONF' Environment variable to define, what file to use", OSSLException::MISSING_CONFIG);

@@ -11,11 +11,13 @@ use PHPMailer\PHPMailer\PHPMailer;
 
 class Mailer extends PHPMailer {
 	use tSingleton;
+	use tDebug;
 
 	private $offlineMode = false;
 	private $mailerFile = null;
 
 	private function __construct() {
+
 		parent::__construct(true);
 
 		$this->isSMTP();                                      //Send using SMTP
@@ -28,36 +30,50 @@ class Mailer extends PHPMailer {
 			$this->Password   = $this->_getEnvVar("MAILER_PASS"); //SMTP password
 		}
 
-		if (!empty(getenv("MAILER_SECURE")))
+		if (!empty(Utils::unpackEnv("MAILER_SECURE")))
 			$this->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;  //Enable implicit TLS encryption
 
-		if (!empty(getenv("MAILER_SENDER_MAIL")))
-			$this->setFrom(getenv("MAILER_SENDER_MAIL"), getenv("MAILER_SENDER_NAME"));
+		if (!empty($tmp = Utils::unpackEnv("MAILER_SENDER_MAIL")))
+			$this->setFrom($tmp, $tmp);
+
+		$this->toErrorLog([
+			"host" => $this->Host,
+			"Port" => $this->Port,
+			"SmtpAuth" => $this->SMTPAuth,
+			"SmtpSecure" => $this->SMTPSecure
+		]);
+
 	}
 
 	public function from(string $sEmail, string $sName = "") {
+
 		$this->setFrom($sEmail, $sName);
 		return $this;
 	}
 	public function to(string $sEmail, string $sName = "") {
+
 		$this->addAddress($sEmail, $sName);
 		return $this;
 	}
 	public function bcc(string $sEmail, string $sName = "") {
+
 		$this->addBCC($sEmail, $sName);
 		return $this;
 	}
 	public function cc(string $sEmail, string $sName = "") {
+
 		$this->addCC($sEmail, $sName);
 		return $this;
 	}
 
 	public function subject(string $subject) {
+
 		$this->Subject = $subject;
 		return $this;
 	}
 
 	public function html(string $content) {
+
 		$this->isHTML(true);
 		$this->Body = $content;
 		if (empty($this->AltBody))
@@ -67,6 +83,7 @@ class Mailer extends PHPMailer {
 	}
 
 	public function send() {
+
 		if ($this->offlineMode) {
 
 			$vars = array_intersect_key(get_object_vars($this), array_flip([
@@ -96,6 +113,7 @@ class Mailer extends PHPMailer {
 	}
 
 	public function text(string $content) {
+
 		$this->AltBody = $content;
 		if (empty($this->Body)) $this->Body = "<pre>" . $content . "</pre>";;
 		return $this;
@@ -103,7 +121,7 @@ class Mailer extends PHPMailer {
 
 	private function _getEnvVar($envVarName) {
 
-		$envVarValue = getenv($envVarName);
+		$envVarValue = Utils::unpackEnv($envVarName);
 		if (empty($envVarValue)) {
 
 			if (!$this->offlineMode) {
@@ -117,7 +135,6 @@ class Mailer extends PHPMailer {
 				if (!$this->mailerFile)
 					trigger_error("fallback for mailer offline mode failed. could not create {$this->mailerFile}", E_USER_ERROR);
 			}
-
 
 			$this->offlineMode = true;
 		}

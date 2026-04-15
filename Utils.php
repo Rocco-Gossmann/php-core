@@ -19,23 +19,23 @@ class Utils
      *
      * @example
      *    $arr = Utils::flattenArray(
-     *      [ "a" => [ 
-     *          "b" => "c", 
+     *      [ "a" => [
+     *          "b" => "c",
      *          "d" => [
      *              "e" => "f",
      *              "g" => "h"
-     *          ] 
+     *          ]
               ],
      *        "i" => "j"
-     *      ], 
+     *      ],
      *      fn($key, prefix) => empty($prefix) ? $key  : ($prefix . "." . $key)
-     *   ) 
+     *   )
      *
      *   results in:
      *   [
-     *        "a.b" => "c" 
-     *      , "a.d.e" => "f" 
-     *      , "a.d.g" => "h" 
+     *        "a.b" => "c"
+     *      , "a.d.e" => "f"
+     *      , "a.d.g" => "h"
      *      , "i" => "j"
      *   ]
      *
@@ -61,7 +61,7 @@ class Utils
      *
      * @param int $iNumberOfChars the number of characters, the string should have
      *
-     * @return string 
+     * @return string
      */
     public static function generateHumanReadableToken($iNumberOfChars)
     {
@@ -101,4 +101,36 @@ class Utils
             else $aTarget[$mKey] = $mValue;
         }
     }
+
+	/**
+	 * allows for using password-store pathes in EnvVars.
+	 * (By wrting the the var in the following schema  `export ENV_VAR="ps[line]:[path_in_password_store]"`)
+	 * envVars that don't fall into that schema are returned as they are.
+	 * That way passwords can be stored savely. Only the Server has the required GPG-Keys to decrypt the passwords.
+	 *
+	 * @param string $envVar - name of the Environment variable
+	 *
+	 * @example
+	 *  `export MAILER_HOST="ps1:dev/Mailer"` => extracts the first line of the pass-stores "dev/Mailer" value as MAILER_HOST
+	 *  `export MAILER_HOST="localhost" => uses "localhost" as the MAILER_HOST
+	 *
+	 * @return string - the value of the unpacked store or the value of the EnvVar.
+	 */
+	private static $_envCache = [];
+	public static function unpackEnv($envVar) : string {
+
+		if(isset(self::$_envCache[$envVar]))
+			return self::$_envCache[$envVar];
+
+		$var = trim(getenv($envVar) ?? "");
+		$matches = [];
+
+		if(preg_match("/ps(?<line>[\d]+):(?<store>.*)$/", $var, $matches))
+			$var = trim(`pass show '{$matches['store']}' | head -n{$matches['line']} | tail -n1`);
+
+		self::$_envCache[$envVar] = $var;
+
+		return $var;
+
+	}
 }
