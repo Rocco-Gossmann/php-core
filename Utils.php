@@ -40,7 +40,7 @@ class Utils
      *   ]
      *
      */
-    public static function flattenArray(array $aMultimensionalArray, Closure $sKeyGenerator = null, string $_sPrefix = "", array &$_output = [])
+    public static function flattenArray(array $aMultimensionalArray, ?Closure $sKeyGenerator = null, string $_sPrefix = "", array &$_output = [])
     {
         if (!is_callable($sKeyGenerator)) $sKeyGenerator = fn ($sKey, $sPrefix) => empty($sPrefix) ? $sKey : $sPrefix . "." . $sKey;
 
@@ -126,7 +126,7 @@ class Utils
 		$matches = [];
 
 		if(preg_match("/ps(?<line>[\d]+):(?<store>.*)$/", $var, $matches))
-			$var = trim(`pass show '{$matches['store']}' | head -n{$matches['line']} | tail -n1`);
+			$var = trim(shell_exec("pass show '{$matches['store']}' | head -n{$matches['line']} | tail -n1"));
 
 		self::$_envCache[$envVar] = $var;
 
